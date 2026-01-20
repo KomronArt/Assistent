@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c3e50">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Соответствия</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="filesScreen" class="files-screen">
+
+  <h1>📚 Мои файлы</h1>
+  <p class="files-subtitle">
+    Выберите файл с заданиями или добавьте новый
+  </p>
+
+  <div class="files-list" id="filesList">
+
+   
+
+    <!-- Пустое состояние -->
+    <div class="file-empty">
+      Пока нет загруженных файлов
+    </div>
+
+  </div>
+
+  <label class="add-file">
+  ➕ Добавить TXT файл
+  <input type="file" id="addFileInput" accept=".txt" hidden>
+</label>
+
+
+</div>
+
+
+
+<div class="app">
+
+  <h1>🧩 Тренажёр соответствий</h1>
+<p class="subtitle">
+  Сопоставьте элементы слева с правильными вариантами справа
+</p>
+
+  <div id="progress"></div>
+  <h3 id="title"></h3>
+
+  <div id="result"></div>
+    <div id="answers"></div>
+    <div id="statsPanel" class="stats-panel" style="display:none"></div>
+  <div id="test"></div>
+
+
+  <div class="nav">
+    <button id="prevBtn">← Назад</button>
+    <button id="nextBtn">Проверить</button>
+
+  </div>
+
+  <div id="final" style="display:none"></div>
+
+</div>
+
+<script src="app.js"></script>
+<!-- MODAL -->
+<div id="examModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>⚙️ Параметры экзамена</h2>
+      <button id="closeModal">✕</button>
+    </div>
+
+    <div class="modal-body">
+        <hr style="margin:16px 0">
+
+<div class="setting">
+  <label>Диапазон вопросов</label>
+  <div style="display:flex; gap:10px">
+    <input id="rangeFrom" type="number" min="1" placeholder="От">
+    <input id="rangeTo" type="number" min="1" placeholder="До">
+  </div>
+</div>
+
+<div class="setting">
+  <label>
+    <input type="checkbox" id="onlyWrong">
+    Только ошибочные
+  </label>
+</div>
+
+<div class="setting">
+  <label>
+    <input type="checkbox" id="onlyUnanswered">
+    Только неотвеченные
+  </label>
+</div>
+<div class="setting">
+  <label>
+    <input type="checkbox" id="onlyFavorite">
+    Только избранные
+  </label>
+</div>
+
+
+
+
+      <div class="setting">
+        <label>Количество вопросов</label>
+        <select id="questionCount">
+          <option value="all">Все</option>
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+
+      <div class="setting">
+        <label>
+          <input type="checkbox" id="shuffleQuestions">
+          Перемешать вопросы
+        </label>
+      </div>
+
+    </div>
+
+    <div class="modal-actions">
+      <button id="cancelExam">Отмена</button>
+      <button class="primary" id="startExamBtn">▶ Начать экзамен</button>
+      <button id="repeatWrongBtn">🔁 Повторить ошибки</button>
+    <button id="repeatFavoriteBtn">⭐ Повторить избранные</button>
+
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
