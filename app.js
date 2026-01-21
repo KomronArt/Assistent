@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* ================== CONSTANTS ================== */
 const STATS_KEY = "questionStats";
+const FILES_KEY = "examFiles";
+
+let storedFiles = JSON.parse(localStorage.getItem(FILES_KEY)) || [];
 
 /* ================== ELEMENTS ================== */
 
@@ -21,11 +24,11 @@ const appEl = document.querySelector(".app");
 const testEl = document.getElementById("test");
 const answersEl = document.getElementById("answers");
 const titleEl = document.getElementById("title");
-const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const progressEl = document.getElementById("progress");
 const resultEl = document.getElementById("result");
 const finalEl = document.getElementById("final");
+const finishBtn = document.getElementById("finishBtn");
 
 /* ================== STATE ================== */
 
@@ -36,6 +39,7 @@ let userAnswers = [];
 let solved = 0;
 let correct = 0;
 let checked = false;
+let questionStatus = [];
 
 let questionStats = JSON.parse(localStorage.getItem(STATS_KEY)) || {};
 
@@ -52,28 +56,29 @@ function saveStats() {
 /* ================== FILE ADD ================== */
 
 addFileInput.addEventListener("change", e => {
-  const empty = filesList.querySelector(".file-empty");
-  if (empty) empty.remove();
-
   const file = e.target.files[0];
   if (!file) return;
 
-  const card = document.createElement("div");
-  card.className = "file-card";
-  card.innerHTML = `
-    <div class="file-main">
-      <div class="file-name">📄 ${file.name}</div>
-      <div class="file-info">Готов к запуску</div>
-    </div>
-    <button class="file-action">▶</button>
-  `;
+  const reader = new FileReader();
 
-  card.onclick = () => {
-    selectedFile = file;
-    examModal.classList.remove("hidden");
+  reader.onload = () => {
+    const fileObj = {
+      name: file.name,
+      content: reader.result,
+      addedAt: Date.now()
+    };
+
+    if (storedFiles.some(f => f.name === file.name)) {
+      alert("Файл уже добавлен");
+      return;
+    }
+
+    storedFiles.push(fileObj);
+    localStorage.setItem(FILES_KEY, JSON.stringify(storedFiles));
+    renderFileCard(fileObj);
   };
 
-  filesList.appendChild(card);
+  reader.readAsText(file);
   addFileInput.value = "";
 });
 
@@ -96,27 +101,23 @@ startExamBtn.onclick = () => {
 
 /* ================== LOAD & PARSE ================== */
 
-function loadExamFromFile(file) {
-  const reader = new FileReader();
+function loadExamFromFile(fileObj) {
+  tests = parseTXT(fileObj.content);
 
-  reader.onload = () => {
-    tests = parseTXT(reader.result);
+  if (!tests.length) {
+    alert("В файле нет вопросов");
+    return;
+  }
 
-    if (tests.length === 0) {
-      alert("В файле нет вопросов");
-      return;
-    }
+  userAnswers = tests.map(() => ["", "", "", ""]);
+  questionStatus = tests.map(() => null);
 
-    userAnswers = tests.map(() => ["", "", "", ""]);
-    currentIndex = 0;
-    solved = 0;
-    correct = 0;
-    checked = false;
+  currentIndex = 0;
+  solved = 0;
+  correct = 0;
+  checked = false;
 
-    renderQuestion();
-  };
-
-  reader.readAsText(file);
+  renderQuestion();
 }
 
 function parseTXT(text) {
@@ -150,7 +151,6 @@ function renderQuestion() {
     questionStats[key] = {
       correct: 0,
       wrong: 0,
-      favorite: false,
       last: null
     };
   }
@@ -167,16 +167,6 @@ function renderQuestion() {
   t.left.forEach((q, i) => {
     const card = document.createElement("div");
     card.className = "card";
-
-    const favBtn = document.createElement("button");
-    favBtn.className = "fav-btn";
-    favBtn.textContent = questionStats[key].favorite ? "★" : "☆";
-    favBtn.onclick = e => {
-      e.stopPropagation();
-      questionStats[key].favorite = !questionStats[key].favorite;
-      saveStats();
-      renderQuestion();
-    };
 
     const text = document.createElement("div");
     text.className = "question";
@@ -202,7 +192,6 @@ function renderQuestion() {
       options.appendChild(btn);
     }
 
-    card.appendChild(favBtn);
     card.appendChild(text);
     card.appendChild(options);
     testEl.appendChild(card);
@@ -219,12 +208,12 @@ function renderQuestion() {
 
 nextBtn.onclick = () => {
   if (!checked) {
-    const keyStr = userAnswers[currentIndex].join("");
-    if (keyStr.length < 4) return;
+    if (userAnswers[currentIndex].some(v => v === "")) return;
 
     solved++;
-    const correctKey = tests[currentIndex].key.split("");
+    const keyStr = userAnswers[currentIndex].join("");
     const isCorrect = keyStr === tests[currentIndex].key;
+    questionStatus[currentIndex] = isCorrect;
 
     const key = statKey(currentIndex);
 
@@ -238,6 +227,8 @@ nextBtn.onclick = () => {
     }
 
     saveStats();
+
+    const correctKey = tests[currentIndex].key.split("");
 
     document.querySelectorAll(".card").forEach((card, i) => {
       card.querySelectorAll(".option-btn").forEach(btn => {
@@ -273,19 +264,33 @@ nextBtn.onclick = () => {
   }
 };
 
-prevBtn.onclick = () => {
-  if (currentIndex > 0) {
-    currentIndex--;
-    renderQuestion();
-  }
-};
+
+/* ================== PROGRESS ================== */
+
+function updateProgress() {
+  progressEl.innerHTML = "";
+
+  tests.forEach((_, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = i + 1;
+    btn.className = "progress-btn";
+
+    if (i === currentIndex) btn.classList.add("active");
+    if (questionStatus[i] === true) btn.classList.add("correct");
+    if (questionStatus[i] === false) btn.classList.add("wrong");
+
+    btn.onclick = () => {
+      currentIndex = i;
+      renderQuestion();
+    };
+
+    progressEl.appendChild(btn);
+  });
+}
 
 /* ================== FINAL ================== */
 
-function updateProgress() {
-  progressEl.textContent =
-    `Вопрос ${currentIndex + 1} из ${tests.length} | Верно: ${correct}`;
-}
+finishBtn.onclick = showFinal;
 
 function showFinal() {
   testEl.style.display = "none";
@@ -295,103 +300,166 @@ function showFinal() {
 
   finalEl.style.display = "block";
 
-  const percent = Math.round((correct / tests.length) * 100);
+  const total = tests.length;
+  const percent = total ? Math.round((correct / total) * 100) : 0;
+
+  let emoji = "🙂";
+  let message = "Неплохой результат";
+  let color = "#3498db";
+
+  if (percent >= 90) {
+    emoji = "🔥🏆";
+    message = "Отлично! Почти идеально!";
+    color = "#27ae60";
+  } else if (percent >= 80) {
+    emoji = "😄";
+    message = "Очень круто!";
+    color = "#2ecc71";
+  } else if (percent >= 70) {
+    emoji = "😊";
+    message = "Хороший результат";
+    color = "#1abc9c";
+  } else if (percent >= 60) {
+    emoji = "🙂";
+    message = "Нормально, есть куда расти";
+    color = "#f1c40f";
+  } else if (percent >= 50) {
+    emoji = "😐";
+    message = "Половина — уже неплохо";
+    color = "#f39c12";
+  } else if (percent >= 40) {
+    emoji = "😕";
+    message = "Стоит повторить материал";
+    color = "#e67e22";
+  } else if (percent >= 30) {
+    emoji = "😟";
+    message = "Нужно больше практики";
+    color = "#e74c3c";
+  } else if (percent >= 20) {
+    emoji = "😣";
+    message = "Сложно, но всё впереди";
+    color = "#c0392b";
+  } else if (percent >= 10) {
+    emoji = "😢";
+    message = "Почти не получилось";
+    color = "#96281b";
+  } else {
+    emoji = "💀";
+    message = "Нужно начать заново и спокойно";
+    color = "#7f8c8d";
+  }
 
   finalEl.innerHTML = `
-    <h2>Экзамен завершён</h2>
-    <p>Правильных ответов: <b>${correct}</b></p>
-    <p>Всего вопросов: <b>${tests.length}</b></p>
-    <p>Результат: <b>${percent}%</b></p>
-    <button onclick="location.reload()">🔄 Начать заново</button>
+    <div class="final-card" style="border-color:${color}">
+      <h1 style="font-size:48px">${emoji}</h1>
+      <h2>${message}</h2>
+
+      <p style="font-size:18px">
+        Решено <b>${correct}</b> из <b>${total}</b>
+      </p>
+
+      <div style="
+        font-size:36px;
+        font-weight:bold;
+        color:${color};
+        margin:20px 0
+      ">
+        ${percent}%
+      </div>
+
+      <button onclick="location.reload()" class="final-btn">
+        🔄 К файлам
+      </button>
+    </div>
   `;
-  showStatsForFile();
-
 }
 
-/* ================== REPEAT WRONG ================== */
 
-if (repeatWrongBtn) {
-  repeatWrongBtn.onclick = () => {
-    if (!selectedFile) {
-      alert("Сначала выберите файл");
-      return;
-    }
 
-    const reader = new FileReader();
+/* ================== FILE CARD ================== */
 
-    reader.onload = () => {
-      const allTests = parseTXT(reader.result);
+function renderFileCard(fileObj) {
+  const card = document.createElement("div");
+  card.className = "file-card";
 
-      const wrongTests = allTests.filter((_, i) => {
-        const key = `${selectedFile.name}::${i}`;
-        const stat = questionStats[key];
-        return stat && stat.wrong > stat.correct;
-      });
+  card.innerHTML = `
+    <div class="delete-zone">
+      🗑
+    </div>
 
-      if (wrongTests.length === 0) {
-        alert("🎉 Ошибочных вопросов нет!");
-        return;
-      }
+    <div class="file-inner">
+      <div class="file-name">${fileObj.name}</div>
+      <div class="file-arrow">›</div>
+    </div>
+  `;
 
-      tests = wrongTests;
-      userAnswers = tests.map(() => ["", "", "", ""]);
+  const inner = card.querySelector(".file-inner");
+  const del = card.querySelector(".delete-zone");
 
-      currentIndex = 0;
-      solved = 0;
-      correct = 0;
-      checked = false;
-
-      filesScreen.classList.add("hidden");
-      appEl.style.display = "block";
-
-      renderQuestion();
-    };
-
-    reader.readAsText(selectedFile);
+  inner.onclick = () => {
+    selectedFile = fileObj;
+    examModal.classList.remove("hidden");
   };
+
+  del.onclick = () => {
+    if (!confirm("Удалить файл?")) return;
+    storedFiles = storedFiles.filter(f => f.name !== fileObj.name);
+    localStorage.setItem(FILES_KEY, JSON.stringify(storedFiles));
+    card.remove();
+  };
+
+  enableSwipe(card);
+  filesList.appendChild(card);
 }
 
 
-function showStatsForFile() {
-  if (!selectedFile) return;
 
-  const total = tests.length;
 
-  let solved = 0;
-  let correct = 0;
-  let wrong = 0;
 
-  tests.forEach((_, i) => {
-    const key = `${selectedFile.name}::${i}`;
-    const stat = questionStats[key];
+function enableSwipe(card) {
+  let startX = 0;
+  let currentX = 0;
 
-    if (!stat) return;
+  const inner = card.querySelector(".file-inner");
 
-    if (stat.correct > 0 || stat.wrong > 0) {
-      solved++;
-      correct += stat.correct;
-      wrong += stat.wrong;
+  inner.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+  });
+
+  inner.addEventListener("touchend", e => {
+    currentX = e.changedTouches[0].clientX;
+    const delta = currentX - startX;
+
+    if (delta < -50) {
+      card.classList.add("swiped");
+    } else {
+      card.classList.remove("swiped");
     }
   });
 
-  const percent = solved
-    ? Math.round((correct / (correct + wrong)) * 100)
-    : 0;
-
-  const panel = document.getElementById("statsPanel");
-  panel.style.display = "block";
-  panel.innerHTML = `
-    <h3>📊 Статистика по файлу</h3>
-    <p>Всего вопросов: <b>${total}</b></p>
-    <p>Решено: <b>${solved}</b></p>
-    <p>Правильных ответов: <b>${correct}</b></p>
-    <p>Ошибок: <b>${wrong}</b></p>
-    <p>Успешность: <b>${percent}%</b></p>
-  `;
+  document.addEventListener("touchstart", e => {
+    if (!card.contains(e.target)) {
+      card.classList.remove("swiped");
+    }
+  });
 }
 
-});
+
+
+/* ================== FILTER UI (DISABLED) ================== */
+
+if (repeatWrongBtn) {
+  repeatWrongBtn.onclick = () => {
+    // фильтры отключены
+  };
+}
+
+/* ================== INIT ================== */
+
+storedFiles.forEach(renderFileCard);
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
 
+});

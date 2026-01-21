@@ -68,13 +68,67 @@ h1 {
 
 #progress {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 12px 0 6px;
-  font-weight: 500;
-  font-size: 14px;
-  color: #444;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: #f6f7f9;
+  border-radius: 12px;
+  margin-bottom: 14px;
 }
+
+.progress-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: none;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.progress-btn:hover {
+  background: #d1d5db;
+  transform: translateY(-1px);
+}
+
+/* текущий вопрос */
+.progress-btn.active {
+  background: #6366f1;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(99,102,241,0.35);
+}
+
+/* правильный */
+.progress-btn.correct {
+  background: #22c55e;
+  color: #fff;
+}
+
+/* неправильный */
+.progress-btn.wrong {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* если активный + правильный */
+.progress-btn.active.correct {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+/* если активный + неправильный */
+.progress-btn.active.wrong {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
 
 /* ===== TITLE ===== */
 
@@ -207,14 +261,7 @@ h1 {
   transition: 0.2s;
 }
 
-/* prev */
-#prevBtn {
-  background: #e0e0e0;
-}
 
-#prevBtn:hover {
-  background: #d5d5d5;
-}
 
 /* next */
 #nextBtn {
@@ -655,3 +702,190 @@ h1 {
   }
 }
 
+.progress-bar {
+  display: flex;
+  flex-wrap: nowrap;        /* ❗ всегда один ряд */
+  overflow-x: auto;         /* горизонтальная прокрутка */
+  overflow-y: hidden;
+  white-space: nowrap;
+  border-bottom: 1px solid #ddd;
+}
+
+.progress-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.progress-bar::-webkit-scrollbar-thumb {
+  background: #ccc;
+}
+
+.progress-btn {
+  min-width: 36px;
+  height: 36px;
+  border: none;
+  border-right: 1px solid #ddd;
+  background: #eee;
+  font-size: 12px;
+  flex-shrink: 0;           /* ❗ не сжиматься */
+}
+
+.progress-btn.active {
+  background: #3498db;
+  color: #fff;
+}
+
+.progress-btn.correct {
+  background: #2ecc71;
+  color: #fff;
+}
+
+.progress-btn.wrong {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.file-stats {
+  margin-top: 6px;
+}
+
+.bar {
+  width: 100%;
+  height: 6px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-correct {
+  height: 100%;
+  background: #2ecc71;
+  width: 0%;
+}
+
+.stat-text {
+  font-size: 11px;
+  color: #555;
+}
+
+.file-card {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.file-card.removing {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+#final {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+#final h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.final-score {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.final-good {
+  color: #27ae60;
+}
+
+.final-bad {
+  color: #c0392b;
+}
+
+.final-btn {
+  margin-top: 25px;
+  padding: 14px 28px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: #3498db;
+  color: #fff;
+}
+.option-btn.active {
+  background: #3498db;
+  color: #fff;
+}
+.final-card {
+  max-width: 420px;
+  margin: 40px auto;
+  padding: 30px;
+  border-radius: 16px;
+  border: 3px solid;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.final-btn {
+  margin-top: 20px;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: #2c3e50;
+  color: #fff;
+}.file-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+/* узкая зона удаления */
+.delete-zone {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 72px;
+  height: 100%;
+  background: #ff3b30;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+/* основной контент */
+.file-inner {
+  position: relative;
+  z-index: 2;
+  background: #fff;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.25s ease;
+}
+
+/* имя */
+.file-name {
+  font-size: 15px;
+  font-weight: 500;
+  max-width: 80%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* стрелка */
+.file-arrow {
+  font-size: 22px;
+  color: #bbb;
+}
+
+/* свайп */
+.file-card.swiped .file-inner {
+  transform: translateX(-72px);
+}

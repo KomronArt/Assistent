@@ -32,6 +32,14 @@
   <label class="add-file">
   ➕ Добавить TXT файл
   <input type="file" id="addFileInput" accept=".txt" hidden>
+
+  <div class="file-stats">
+  <div class="bar">
+    <div class="bar-correct"></div>
+  </div>
+  <small class="stat-text"></small>
+</div>
+
 </label>
 
 
@@ -46,7 +54,7 @@
   Сопоставьте элементы слева с правильными вариантами справа
 </p>
 
-  <div id="progress"></div>
+  <div id="progress" class="progress-bar"></div>
   <h3 id="title"></h3>
 
   <div id="result"></div>
@@ -56,7 +64,7 @@
 
 
   <div class="nav">
-    <button id="prevBtn">← Назад</button>
+    <button id="finishBtn">Завершить</button>
     <button id="nextBtn">Проверить</button>
 
   </div>
@@ -66,6 +74,7 @@
 </div>
 
 <script src="app.js"></script>
+
 <!-- MODAL -->
 <div id="examModal" class="modal hidden">
   <div class="modal-content">
